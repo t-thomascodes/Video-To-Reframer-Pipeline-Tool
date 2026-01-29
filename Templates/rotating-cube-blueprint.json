@@ -1,0 +1,440 @@
+{
+  "$schema": "remotion-blueprint-v1.0",
+  "version": "1.0.0",
+  "generatedBy": "gemini-2.0-flash-exp",
+  
+  "metadata": {
+    "sourceVideo": "https://example.com/cube-rotate-pop.mp4",
+    "analyzedAt": "2026-01-28T15:30:00Z",
+    "durationSeconds": 3.0,
+    "dimensions": { "width": 1920, "height": 1080 },
+    "description": "A 3D wireframe cube with golden edges rotates on the Y-axis while scaling up, then rapidly expands and explodes into particles that fade away"
+  },
+
+  "composition": {
+    "id": "rotating-cube-pop",
+    "fps": 30,
+    "width": 1920,
+    "height": 1080,
+    "durationInFrames": 90,
+    "defaultProps": {
+      "cubeColor": "#FFD700",
+      "backgroundColor": "#000000",
+      "rotationSpeed": 0.5,
+      "cubeSize": 100,
+      "edgeThickness": 4,
+      "particleCount": 20,
+      "particleSeed": "cube-pop-particles"
+    }
+  },
+
+  "dependencies": {
+    "required": [
+      "remotion",
+      "@remotion/three",
+      "three",
+      "@react-three/fiber",
+      "@react-three/drei"
+    ],
+    "minimumVersions": {
+      "remotion": "4.0.0",
+      "@remotion/three": "4.0.0",
+      "three": "0.150.0",
+      "@react-three/fiber": "8.0.0",
+      "@react-three/drei": "9.0.0"
+    },
+    "devDependencies": ["@types/three"]
+  },
+
+  "imports": {
+    "remotion": [
+      "useCurrentFrame",
+      "useVideoConfig", 
+      "interpolate",
+      "Easing",
+      "random",
+      "AbsoluteFill",
+      "Sequence"
+    ],
+    "@remotion/three": ["ThreeCanvas"],
+    "three": ["Color"],
+    "@react-three/drei": ["Edges"],
+    "react": ["useMemo"]
+  },
+
+  "components": [
+    {
+      "name": "RotatingCubePop",
+      "type": "composition-root",
+      "purpose": "Main composition wrapper with background and 3D canvas",
+      "children": ["ThreeScene"]
+    },
+    {
+      "name": "ThreeScene",
+      "type": "three-canvas-content",
+      "purpose": "3D scene containing cube and particles, rendered inside ThreeCanvas",
+      "children": ["AnimatedCube", "ParticleField"]
+    },
+    {
+      "name": "AnimatedCube",
+      "type": "three-mesh",
+      "purpose": "The rotating, scaling wireframe cube",
+      "props": ["cubeColor", "cubeSize", "edgeThickness"],
+      "visibility": {
+        "startFrame": 0,
+        "endFrame": 72,
+        "note": "Cube fades out during explosion, fully gone by frame 72"
+      }
+    },
+    {
+      "name": "ParticleField",
+      "type": "three-group",
+      "purpose": "Explosion particles that appear at frame 70",
+      "props": ["particleCount", "particleSeed", "cubeColor"],
+      "visibility": {
+        "startFrame": 70,
+        "endFrame": 90
+      }
+    }
+  ],
+
+  "threeCanvasConfig": {
+    "props": {
+      "width": "videoConfig.width",
+      "height": "videoConfig.height",
+      "orthographic": false,
+      "camera": {
+        "fov": 75,
+        "position": [0, 0, 470],
+        "near": 0.1,
+        "far": 2000
+      },
+      "style": {
+        "backgroundColor": "#000000"
+      }
+    },
+    "lighting": [
+      {
+        "type": "ambientLight",
+        "intensity": 0.5
+      }
+    ],
+    "codeExample": "<ThreeCanvas\n  width={width}\n  height={height}\n  camera={{ fov: 75, position: [0, 0, 470] }}\n  style={{ backgroundColor: '#000000' }}\n>\n  {/* Scene content */}\n</ThreeCanvas>"
+  },
+
+  "renderConfig": {
+    "chromiumOptions": {
+      "gl": "angle"
+    },
+    "concurrency": "50%",
+    "imageFormat": "jpeg",
+    "jpegQuality": 90,
+    "note": "gl: 'angle' is REQUIRED for Three.js server-side rendering"
+  },
+
+  "timeline": [
+    {
+      "phase": "rotation-and-scale-up",
+      "startFrame": 0,
+      "endFrame": 60,
+      "description": "Cube rotates continuously on Y-axis while smoothly scaling from small to large",
+      "animations": [
+        {
+          "property": "rotation.y",
+          "type": "continuous-rotation",
+          "implementation": {
+            "pattern": "frame-rate-independent",
+            "code": "const rotationY = (frame / fps) * Math.PI * rotationSpeed;",
+            "note": "Use fps from useVideoConfig() - do NOT hardcode"
+          }
+        },
+        {
+          "property": "scale",
+          "type": "interpolated",
+          "inputRange": [0, 60],
+          "outputRange": [0.3, 1.5],
+          "easing": {
+            "type": "bezier",
+            "params": [0.25, 0.1, 0.25, 1.0],
+            "description": "Smooth ease-out curve"
+          },
+          "implementation": {
+            "code": "const scale = interpolate(\n  frame,\n  [0, 60],\n  [0.3, 1.5],\n  {\n    easing: Easing.bezier(0.25, 0.1, 0.25, 1.0),\n    extrapolateLeft: 'clamp',\n    extrapolateRight: 'clamp',\n  }\n);",
+            "note": "ALWAYS include both extrapolateLeft AND extrapolateRight"
+          }
+        },
+        {
+          "property": "opacity",
+          "type": "static",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "phase": "pop-expansion",
+      "startFrame": 60,
+      "endFrame": 72,
+      "description": "Cube rapidly scales up with overshoot effect, begins fading",
+      "animations": [
+        {
+          "property": "rotation.y",
+          "type": "continuous-rotation",
+          "implementation": {
+            "note": "Rotation continues from previous phase"
+          }
+        },
+        {
+          "property": "scale",
+          "type": "interpolated",
+          "inputRange": [60, 72],
+          "outputRange": [1.5, 2.8],
+          "easing": {
+            "type": "bezier",
+            "params": [0.68, -0.55, 0.265, 1.55],
+            "description": "Ease-in-out-back for dramatic overshoot pop effect"
+          },
+          "implementation": {
+            "code": "const popScale = interpolate(\n  frame,\n  [60, 72],\n  [1.5, 2.8],\n  {\n    easing: Easing.bezier(0.68, -0.55, 0.265, 1.55),\n    extrapolateLeft: 'clamp',\n    extrapolateRight: 'clamp',\n  }\n);"
+          }
+        },
+        {
+          "property": "opacity",
+          "type": "interpolated",
+          "inputRange": [60, 72],
+          "outputRange": [1, 0],
+          "easing": {
+            "type": "bezier",
+            "params": [0.4, 0, 1, 1],
+            "description": "Ease-in for fade out"
+          },
+          "implementation": {
+            "code": "const cubeOpacity = interpolate(\n  frame,\n  [60, 72],\n  [1, 0],\n  {\n    easing: Easing.bezier(0.4, 0, 1, 1),\n    extrapolateLeft: 'clamp',\n    extrapolateRight: 'clamp',\n  }\n);"
+          }
+        }
+      ]
+    },
+    {
+      "phase": "particle-explosion",
+      "startFrame": 70,
+      "endFrame": 90,
+      "description": "Particles spawn from cube center and spread outward while fading",
+      "animations": [
+        {
+          "property": "particle-positions",
+          "type": "deterministic-random-spread",
+          "implementation": {
+            "seedPattern": "Use random(`particle-${property}-${index}`) for each particle property",
+            "code": "// Generate particle data ONCE with useMemo\nconst particles = useMemo(() => {\n  return Array.from({ length: particleCount }, (_, i) => ({\n    // Direction vector (normalized)\n    dirX: random(`particle-dir-x-${particleSeed}-${i}`) * 2 - 1,\n    dirY: random(`particle-dir-y-${particleSeed}-${i}`) * 2 - 1,\n    dirZ: random(`particle-dir-z-${particleSeed}-${i}`) * 2 - 1,\n    // Speed multiplier\n    speed: random(`particle-speed-${particleSeed}-${i}`) * 200 + 100,\n    // Size variation\n    size: random(`particle-size-${particleSeed}-${i}`) * 8 + 4,\n  }));\n}, [particleCount, particleSeed]);",
+            "critical": "MUST use useMemo to prevent recalculation on every frame"
+          }
+        },
+        {
+          "property": "particle-distance",
+          "type": "interpolated",
+          "inputRange": [70, 90],
+          "outputRange": [0, 1],
+          "easing": {
+            "type": "bezier",
+            "params": [0.0, 0.0, 0.2, 1.0],
+            "description": "Ease-out for natural deceleration"
+          },
+          "implementation": {
+            "code": "const explosionProgress = interpolate(\n  frame,\n  [70, 90],\n  [0, 1],\n  {\n    easing: Easing.bezier(0.0, 0.0, 0.2, 1.0),\n    extrapolateLeft: 'clamp',\n    extrapolateRight: 'clamp',\n  }\n);\n\n// Apply to each particle\nconst particleX = particle.dirX * particle.speed * explosionProgress;\nconst particleY = particle.dirY * particle.speed * explosionProgress;\nconst particleZ = particle.dirZ * particle.speed * explosionProgress;"
+          }
+        },
+        {
+          "property": "particle-opacity",
+          "type": "interpolated",
+          "inputRange": [70, 85, 90],
+          "outputRange": [0, 1, 0],
+          "implementation": {
+            "code": "const particleOpacity = interpolate(\n  frame,\n  [70, 75, 90],\n  [0, 1, 0],\n  {\n    extrapolateLeft: 'clamp',\n    extrapolateRight: 'clamp',\n  }\n);",
+            "note": "Particles fade in quickly, then fade out as they spread"
+          }
+        }
+      ]
+    }
+  ],
+
+  "keyframes": [
+    {
+      "frame": 0,
+      "description": "Initial state - small cube centered",
+      "state": {
+        "cube": { "scale": 0.3, "rotationY": 0, "opacity": 1, "visible": true },
+        "particles": { "visible": false }
+      }
+    },
+    {
+      "frame": 30,
+      "description": "Midpoint of scale-up",
+      "state": {
+        "cube": { "scale": 0.9, "rotationY": "~90deg", "opacity": 1, "visible": true },
+        "particles": { "visible": false }
+      }
+    },
+    {
+      "frame": 60,
+      "description": "End of smooth scale-up, begin pop",
+      "state": {
+        "cube": { "scale": 1.5, "rotationY": "~180deg", "opacity": 1, "visible": true },
+        "particles": { "visible": false }
+      }
+    },
+    {
+      "frame": 70,
+      "description": "Particles spawn, cube still scaling",
+      "state": {
+        "cube": { "scale": "~2.2", "rotationY": "~210deg", "opacity": "~0.5", "visible": true },
+        "particles": { "visible": true, "spread": 0, "opacity": 0 }
+      }
+    },
+    {
+      "frame": 72,
+      "description": "Peak pop - cube fully faded",
+      "state": {
+        "cube": { "scale": 2.8, "rotationY": "~216deg", "opacity": 0, "visible": false },
+        "particles": { "visible": true, "spread": "~10%", "opacity": "~0.4" }
+      }
+    },
+    {
+      "frame": 75,
+      "description": "Particles fully visible and spreading",
+      "state": {
+        "cube": { "visible": false },
+        "particles": { "visible": true, "spread": "~25%", "opacity": 1 }
+      }
+    },
+    {
+      "frame": 90,
+      "description": "Final frame - particles faded out",
+      "state": {
+        "cube": { "visible": false },
+        "particles": { "visible": true, "spread": "100%", "opacity": 0 }
+      }
+    }
+  ],
+
+  "implementationGuidelines": {
+    "critical": [
+      "MUST use random('unique-seed-string') from 'remotion' - NEVER Math.random()",
+      "MUST drive ALL animations from useCurrentFrame() return value",
+      "MUST use fps from useVideoConfig() for frame-rate-independent timing",
+      "MUST include BOTH extrapolateLeft: 'clamp' AND extrapolateRight: 'clamp' in interpolate()",
+      "MUST use layout='none' on any <Sequence> inside <ThreeCanvas>",
+      "MUST set chromiumOptions.gl = 'angle' in render config for Three.js",
+      "MUST NOT use CSS transitions, animations, or setTimeout/setInterval",
+      "MUST NOT use useState for animation values - derive everything from frame"
+    ],
+    "recommended": [
+      "SHOULD wrap geometry/material creation in useMemo() to prevent recreation each frame",
+      "SHOULD use <AbsoluteFill> for layering 2D content over 3D canvas",
+      "SHOULD extract animation logic into custom hooks for reusability",
+      "SHOULD use Easing.bezier() for smooth, professional-looking curves"
+    ],
+    "memoizationPatterns": {
+      "geometry": "const geometry = useMemo(() => new BoxGeometry(size, size, size), [size]);",
+      "particles": "const particleData = useMemo(() => generateParticles(count, seed), [count, seed]);",
+      "materials": "const material = useMemo(() => new LineBasicMaterial({ color }), [color]);",
+      "note": "Memoize anything created with 'new' or expensive computations"
+    },
+    "sequenceUsage": {
+      "note": "Use Sequences to organize timeline phases, but MUST add layout='none' inside ThreeCanvas",
+      "example": "<ThreeCanvas width={width} height={height}>\n  <Sequence from={0} durationInFrames={72} layout=\"none\">\n    <AnimatedCube />\n  </Sequence>\n  <Sequence from={70} layout=\"none\">\n    <ParticleField />\n  </Sequence>\n</ThreeCanvas>"
+    },
+    "antiPatterns": [
+      {
+        "wrong": "const [scale, setScale] = useState(0.3);",
+        "right": "const scale = interpolate(frame, [0, 60], [0.3, 1.5], {...});",
+        "reason": "useState causes non-deterministic renders across parallel threads"
+      },
+      {
+        "wrong": "Math.random() * 100",
+        "right": "random('my-unique-seed') * 100",
+        "reason": "Math.random() gives different values per render thread, causing flicker"
+      },
+      {
+        "wrong": "<div style={{ transition: 'transform 0.5s' }}>",
+        "right": "<div style={{ transform: `scale(${scale})` }}>",
+        "reason": "CSS transitions are time-based, not frame-based"
+      },
+      {
+        "wrong": "interpolate(frame, [0, 60], [0, 1])",
+        "right": "interpolate(frame, [0, 60], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })",
+        "reason": "Without clamping, values outside range can produce unexpected results"
+      }
+    ]
+  },
+
+  "codeTemplates": {
+    "compositionRoot": "import React, { useMemo } from 'react';\nimport {\n  useCurrentFrame,\n  useVideoConfig,\n  interpolate,\n  Easing,\n  random,\n  AbsoluteFill,\n  Sequence,\n} from 'remotion';\nimport { ThreeCanvas } from '@remotion/three';\nimport { Edges } from '@react-three/drei';\n\nexport const RotatingCubePop: React.FC<{\n  cubeColor?: string;\n  backgroundColor?: string;\n  rotationSpeed?: number;\n  cubeSize?: number;\n  edgeThickness?: number;\n  particleCount?: number;\n  particleSeed?: string;\n}> = ({\n  cubeColor = '#FFD700',\n  backgroundColor = '#000000',\n  rotationSpeed = 0.5,\n  cubeSize = 100,\n  edgeThickness = 4,\n  particleCount = 20,\n  particleSeed = 'cube-pop-particles',\n}) => {\n  const frame = useCurrentFrame();\n  const { fps, width, height } = useVideoConfig();\n\n  return (\n    <AbsoluteFill style={{ backgroundColor }}>\n      <ThreeCanvas\n        width={width}\n        height={height}\n        camera={{ fov: 75, position: [0, 0, 470] }}\n      >\n        <ambientLight intensity={0.5} />\n        <AnimatedCube\n          frame={frame}\n          fps={fps}\n          cubeColor={cubeColor}\n          cubeSize={cubeSize}\n          edgeThickness={edgeThickness}\n          rotationSpeed={rotationSpeed}\n        />\n        <ParticleField\n          frame={frame}\n          fps={fps}\n          particleCount={particleCount}\n          particleSeed={particleSeed}\n          particleColor={cubeColor}\n        />\n      </ThreeCanvas>\n    </AbsoluteFill>\n  );\n};",
+    
+    "animatedCube": "const AnimatedCube: React.FC<{\n  frame: number;\n  fps: number;\n  cubeColor: string;\n  cubeSize: number;\n  edgeThickness: number;\n  rotationSpeed: number;\n}> = ({ frame, fps, cubeColor, cubeSize, edgeThickness, rotationSpeed }) => {\n  // Rotation: continuous, frame-rate-independent\n  const rotationY = (frame / fps) * Math.PI * rotationSpeed;\n\n  // Scale: two-phase animation\n  const scalePhase1 = interpolate(frame, [0, 60], [0.3, 1.5], {\n    easing: Easing.bezier(0.25, 0.1, 0.25, 1.0),\n    extrapolateLeft: 'clamp',\n    extrapolateRight: 'clamp',\n  });\n\n  const scalePhase2 = interpolate(frame, [60, 72], [1.5, 2.8], {\n    easing: Easing.bezier(0.68, -0.55, 0.265, 1.55),\n    extrapolateLeft: 'clamp',\n    extrapolateRight: 'clamp',\n  });\n\n  const scale = frame < 60 ? scalePhase1 : scalePhase2;\n\n  // Opacity: fade out during pop\n  const opacity = interpolate(frame, [60, 72], [1, 0], {\n    extrapolateLeft: 'clamp',\n    extrapolateRight: 'clamp',\n  });\n\n  // Don't render if fully transparent\n  if (opacity <= 0) return null;\n\n  return (\n    <mesh rotation={[0, rotationY, 0]} scale={scale}>\n      <boxGeometry args={[cubeSize, cubeSize, cubeSize]} />\n      <meshBasicMaterial transparent opacity={0} />\n      <Edges\n        color={cubeColor}\n        lineWidth={edgeThickness}\n        threshold={15}\n      />\n    </mesh>\n  );\n};",
+
+    "particleField": "const ParticleField: React.FC<{\n  frame: number;\n  fps: number;\n  particleCount: number;\n  particleSeed: string;\n  particleColor: string;\n}> = ({ frame, fps, particleCount, particleSeed, particleColor }) => {\n  // Don't render before explosion starts\n  if (frame < 70) return null;\n\n  // Generate deterministic particle data - MEMOIZED\n  const particles = useMemo(() => {\n    return Array.from({ length: particleCount }, (_, i) => {\n      // Normalize direction vector for even distribution\n      const dirX = random(`${particleSeed}-dir-x-${i}`) * 2 - 1;\n      const dirY = random(`${particleSeed}-dir-y-${i}`) * 2 - 1;\n      const dirZ = random(`${particleSeed}-dir-z-${i}`) * 2 - 1;\n      const mag = Math.sqrt(dirX * dirX + dirY * dirY + dirZ * dirZ);\n\n      return {\n        id: i,\n        dirX: dirX / mag,\n        dirY: dirY / mag,\n        dirZ: dirZ / mag,\n        speed: random(`${particleSeed}-speed-${i}`) * 200 + 100,\n        size: random(`${particleSeed}-size-${i}`) * 8 + 4,\n      };\n    });\n  }, [particleCount, particleSeed]);\n\n  // Animation progress\n  const explosionProgress = interpolate(frame, [70, 90], [0, 1], {\n    easing: Easing.bezier(0.0, 0.0, 0.2, 1.0),\n    extrapolateLeft: 'clamp',\n    extrapolateRight: 'clamp',\n  });\n\n  const particleOpacity = interpolate(frame, [70, 75, 90], [0, 1, 0], {\n    extrapolateLeft: 'clamp',\n    extrapolateRight: 'clamp',\n  });\n\n  return (\n    <group>\n      {particles.map((p) => {\n        const x = p.dirX * p.speed * explosionProgress;\n        const y = p.dirY * p.speed * explosionProgress;\n        const z = p.dirZ * p.speed * explosionProgress;\n\n        return (\n          <mesh key={p.id} position={[x, y, z]}>\n            <sphereGeometry args={[p.size, 8, 8]} />\n            <meshBasicMaterial\n              color={particleColor}\n              transparent\n              opacity={particleOpacity}\n            />\n          </mesh>\n        );\n      })}\n    </group>\n  );\n};"
+  },
+
+  "validation": {
+    "checksumFrames": [0, 30, 60, 70, 72, 90],
+    "expectedBehavior": [
+      "Frame 0: Cube visible at scale 0.3, rotation 0",
+      "Frame 30: Cube at approximately scale 0.9, rotated ~90 degrees",
+      "Frame 60: Cube at exactly scale 1.5, rotated ~180 degrees", 
+      "Frame 70: Particles begin appearing, cube still visible but fading",
+      "Frame 72: Cube fully faded, particles spreading",
+      "Frame 90: Only particles visible, fully faded out"
+    ],
+    "deterministicTests": [
+      "Render frame 30 twice - pixel output must be identical",
+      "Render frame 70 on two threads simultaneously - particle positions must match",
+      "Render full video twice - file hash should be identical"
+    ],
+    "performanceTargets": {
+      "previewFps": ">= 24fps on mid-range GPU",
+      "renderTime": "< 60s for 90 frames at 1080p"
+    }
+  },
+
+  "troubleshooting": {
+    "flickeringParticles": {
+      "symptom": "Particles appear in different positions across frames",
+      "cause": "Using Math.random() instead of deterministic random()",
+      "solution": "Replace Math.random() with random('unique-seed-per-particle')"
+    },
+    "blackScreen": {
+      "symptom": "Three.js canvas renders black during export",
+      "cause": "Missing OpenGL renderer configuration",
+      "solution": "Add chromiumOptions: { gl: 'angle' } to render config"
+    },
+    "animationNotSmooth": {
+      "symptom": "Animation stutters or jumps",
+      "cause": "Using time-based animation instead of frame-based",
+      "solution": "Ensure all animations derive from useCurrentFrame(), not Date.now() or setTimeout"
+    },
+    "wrongScale": {
+      "symptom": "Animation values exceed expected range",
+      "cause": "Missing extrapolate options in interpolate()",
+      "solution": "Add extrapolateLeft: 'clamp' and extrapolateRight: 'clamp'"
+    },
+    "sequenceError": {
+      "symptom": "Error about div inside ThreeCanvas",
+      "cause": "Sequence components return a div by default",
+      "solution": "Add layout=\"none\" prop to all Sequences inside ThreeCanvas"
+    }
+  },
+
+  "fileStructure": {
+    "recommended": [
+      "src/",
+      "  compositions/",
+      "    RotatingCubePop/",
+      "      index.tsx           # Main composition export",
+      "      AnimatedCube.tsx    # Cube mesh component",
+      "      ParticleField.tsx   # Particle explosion component",
+      "      types.ts            # Shared TypeScript types",
+      "  Root.tsx                # Remotion composition registration",
+      ".gemini/",
+      "  rotating-cube-blueprint.json  # This blueprint file"
+    ]
+  }
+}

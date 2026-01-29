@@ -1,0 +1,154 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2867
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 \{\
+  "$schema": "remotion-blueprint-v1.1",\
+  "version": "1.1.0",\
+  "generatedBy": "gemini-2.0-flash-exp",\
+  "metadata": \{\
+    "description": "3D Cinematic Text Reveal: A GLTF model logo floats behind 3D text that slides in with a motion-blur trailing effect and a light sweep.",\
+    "durationSeconds": 5.0,\
+    "dimensions": \{ "width": 1920, "height": 1080 \}\
+  \},\
+\
+  "assets": [\
+    \{\
+      "id": "brand-logo-model",\
+      "type": "gltf",\
+      "url": "https://assets.example.com/models/logo-mesh.glb",\
+      "note": "Use staticFile() if local, or useGLTF() for remote"\
+    \},\
+    \{\
+      "id": "main-font",\
+      "type": "font",\
+      "url": "https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hiA.woff2",\
+      "family": "Inter-Bold"\
+    \}\
+  ],\
+\
+  "composition": \{\
+    "id": "cinematic-reveal",\
+    "fps": 60,\
+    "durationInFrames": 300,\
+    "defaultProps": \{\
+      "text": "REMOTEC",\
+      "primaryColor": "#60a5fa",\
+      "modelScale": 2.5\
+    \}\
+  \},\
+\
+  "components": [\
+    \{\
+      "id": "root-scene",\
+      "type": "three-canvas",\
+      "purpose": "Global 3D coordinate space"\
+    \},\
+    \{\
+      "id": "logo-model",\
+      "type": "gltf-component",\
+      "parentId": "root-scene",\
+      "assetId": "brand-logo-model",\
+      "purpose": "Background hero element"\
+    \},\
+    \{\
+      "id": "reveal-text",\
+      "type": "three-text-3d",\
+      "parentId": "root-scene",\
+      "assetId": "main-font",\
+      "purpose": "Primary foreground 3D text with depth"\
+    \},\
+    \{\
+      "id": "light-sweep",\
+      "type": "spot-light",\
+      "parentId": "root-scene",\
+      "purpose": "Dynamic lighting for highlight effect"\
+    \}\
+  ],\
+\
+  "timeline": [\
+    \{\
+      "phase": "intro-slide",\
+      "startFrame": 0,\
+      "endFrame": 90,\
+      "animations": [\
+        \{\
+          "target": "reveal-text",\
+          "property": "position.z",\
+          "inputRange": [0, 90],\
+          "outputRange": [-500, 0],\
+          "easing": \{\
+            "type": "bezier",\
+            "coordinates": [0.22, 1, 0.36, 1],\
+            "nameHint": "ease-out-quint"\
+          \}\
+        \},\
+        \{\
+          "target": "reveal-text",\
+          "property": "opacity",\
+          "inputRange": [0, 45],\
+          "outputRange": [0, 1],\
+          "easing": \{ "type": "linear", "coordinates": [0, 0, 1, 1] \}\
+        \}\
+      ]\
+    \},\
+    \{\
+      "phase": "logo-float",\
+      "startFrame": 0,\
+      "endFrame": 300,\
+      "animations": [\
+        \{\
+          "target": "logo-model",\
+          "property": "position.y",\
+          "type": "sine-wave",\
+          "implementation": \{\
+            "code": "const float = Math.sin((frame / fps) * 2) * 10;",\
+            "note": "Subtle hovering effect"\
+          \}\
+        \}\
+      ]\
+    \},\
+    \{\
+      "phase": "light-pass",\
+      "startFrame": 100,\
+      "endFrame": 180,\
+      "animations": [\
+        \{\
+          "target": "light-sweep",\
+          "property": "position.x",\
+          "inputRange": [100, 180],\
+          "outputRange": [-1000, 1000],\
+          "easing": \{\
+            "type": "bezier",\
+            "coordinates": [0.45, 0, 0.55, 1],\
+            "nameHint": "ease-in-out-sine"\
+          \}\
+        \}\
+      ]\
+    \}\
+  ],\
+\
+  "implementationGuidelines": \{\
+    "critical": [\
+      "MUST use @remotion/three for the Canvas setup.",\
+      "MUST use <Suspense> when loading the GLTF model and Fonts.",\
+      "All Three.js elements must use 'layout=none' if wrapped in <Sequence>.",\
+      "Use interpolate() with \{ extrapolateLeft: 'clamp', extrapolateRight: 'clamp' \} for all phase transitions."\
+    ],\
+    "threeSpecific": \{\
+      "text3D": "Use <Text3D> from @react-three/drei for the 'reveal-text' component.",\
+      "lighting": "Apply a MeshStandardMaterial to both text and model to ensure the light-sweep is visible."\
+    \}\
+  \},\
+\
+  "antiPatterns": [\
+    \{\
+      "wrong": "const model = useLoader(GLTFLoader, url)",\
+      "right": "const \{ scene \} = useGLTF(url)",\
+      "reason": "useGLTF from @react-three/drei is more performant and handles caching better in Remotion."\
+    \}\
+  ]\
+\}}

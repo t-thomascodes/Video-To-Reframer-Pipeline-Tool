@@ -1,0 +1,110 @@
+{
+  "source": {
+    "url": "https://example.com/cube-rotate-pop.mp4",
+    "analyzedAt": "2026-01-28T15:30:00Z"
+  },
+
+  "canvas": {
+    "width": 1920,
+    "height": 1080,
+    "duration": 3.0,
+    "fps": 30,
+    "background": "#000000"
+  },
+
+  "objects": [
+    {
+      "id": "cube",
+      "type": "3d-wireframe-box",
+      "appearance": {
+        "edgeColor": "#FFD700",
+        "edgeThickness": 4,
+        "fillColor": null,
+        "size": 100
+      },
+      "lifespan": [0, 2.4]
+    },
+    {
+      "id": "particles",
+      "type": "particle-burst",
+      "appearance": {
+        "color": "#FFD700",
+        "count": 20,
+        "shape": "sphere",
+        "sizeRange": [4, 12]
+      },
+      "lifespan": [2.33, 3.0]
+    }
+  ],
+
+  "animations": [
+    {
+      "target": "cube",
+      "property": "rotationY",
+      "keyframes": [
+        { "time": 0, "value": 0 },
+        { "time": 2.0, "value": 180 },
+        { "time": 2.4, "value": 216 }
+      ],
+      "easing": "linear"
+    },
+    {
+      "target": "cube",
+      "property": "scale",
+      "keyframes": [
+        { "time": 0, "value": 0.3 },
+        { "time": 2.0, "value": 1.5, "easing": "ease-out" },
+        { "time": 2.4, "value": 2.8, "easing": "ease-in-back" }
+      ]
+    },
+    {
+      "target": "cube",
+      "property": "opacity",
+      "keyframes": [
+        { "time": 0, "value": 1 },
+        { "time": 2.0, "value": 1 },
+        { "time": 2.4, "value": 0, "easing": "ease-in" }
+      ]
+    },
+    {
+      "target": "particles",
+      "property": "spread",
+      "keyframes": [
+        { "time": 2.33, "value": 0 },
+        { "time": 3.0, "value": 300, "easing": "ease-out" }
+      ]
+    },
+    {
+      "target": "particles",
+      "property": "opacity",
+      "keyframes": [
+        { "time": 2.33, "value": 0 },
+        { "time": 2.5, "value": 1 },
+        { "time": 3.0, "value": 0 }
+      ]
+    }
+  ],
+
+  "snapshots": [
+    {
+      "time": 0,
+      "description": "Small golden wireframe cube centered on black background"
+    },
+    {
+      "time": 1.0,
+      "description": "Cube has grown to medium size, rotated ~90 degrees"
+    },
+    {
+      "time": 2.0,
+      "description": "Cube at full size (1.5x), rotated ~180 degrees"
+    },
+    {
+      "time": 2.4,
+      "description": "Cube scaled large and faded out, particles beginning to spread"
+    },
+    {
+      "time": 3.0,
+      "description": "Only faint particles visible, spread wide, fading to black"
+    }
+  ]
+}

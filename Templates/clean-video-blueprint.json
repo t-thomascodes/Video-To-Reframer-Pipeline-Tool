@@ -1,0 +1,140 @@
+{
+  "$schema": "video-inspiration-blueprint-v1.0",
+  "generatedBy": "gemini-2.0-flash-exp",
+
+  "source": {
+    "description": "3D cinematic text reveal with floating logo, motion-blur text slide-in, and sweeping light effect",
+    "duration": 5.0,
+    "dimensions": { "width": 1920, "height": 1080 },
+    "fps": 60,
+    "background": "#000000"
+  },
+
+  "assets": [
+    {
+      "id": "logo-model",
+      "type": "3d-model",
+      "description": "Stylized brand logo, appears metallic/reflective",
+      "position": "background, centered"
+    },
+    {
+      "id": "main-text",
+      "type": "3d-text",
+      "content": "REMOTEC",
+      "style": {
+        "font": "sans-serif bold",
+        "color": "#60a5fa",
+        "depth": "extruded",
+        "material": "reflective"
+      },
+      "position": "foreground, centered"
+    },
+    {
+      "id": "sweep-light",
+      "type": "light-source",
+      "description": "Narrow spotlight that crosses the scene horizontally",
+      "color": "#ffffff"
+    }
+  ],
+
+  "layers": [
+    { "order": 0, "assetId": "logo-model", "depth": "back" },
+    { "order": 1, "assetId": "main-text", "depth": "front" },
+    { "order": 2, "assetId": "sweep-light", "depth": "illumination" }
+  ],
+
+  "animations": [
+    {
+      "id": "text-slide-in",
+      "target": "main-text",
+      "property": "position.z",
+      "description": "Text slides toward camera from deep in the scene",
+      "keyframes": [
+        { "time": 0, "value": -500 },
+        { "time": 1.5, "value": 0 }
+      ],
+      "easing": "ease-out-strong",
+      "motionBlur": true
+    },
+    {
+      "id": "text-fade-in",
+      "target": "main-text",
+      "property": "opacity",
+      "keyframes": [
+        { "time": 0, "value": 0 },
+        { "time": 0.75, "value": 1 }
+      ],
+      "easing": "linear"
+    },
+    {
+      "id": "logo-float",
+      "target": "logo-model",
+      "property": "position.y",
+      "description": "Logo gently bobs up and down throughout",
+      "motion": "oscillating",
+      "amplitude": 10,
+      "period": 3.0,
+      "lifespan": [0, 5.0]
+    },
+    {
+      "id": "logo-slow-spin",
+      "target": "logo-model",
+      "property": "rotation.y",
+      "description": "Logo slowly rotates on Y axis",
+      "keyframes": [
+        { "time": 0, "value": 0 },
+        { "time": 5.0, "value": 30 }
+      ],
+      "easing": "linear"
+    },
+    {
+      "id": "light-sweep",
+      "target": "sweep-light",
+      "property": "position.x",
+      "description": "Light passes across the scene left to right",
+      "keyframes": [
+        { "time": 1.67, "value": -1000 },
+        { "time": 3.0, "value": 1000 }
+      ],
+      "easing": "ease-in-out"
+    }
+  ],
+
+  "snapshots": [
+    {
+      "time": 0,
+      "description": "Black screen, logo barely visible in background, text not yet visible"
+    },
+    {
+      "time": 0.5,
+      "description": "Text emerging from depth with motion blur trail, partially transparent"
+    },
+    {
+      "time": 1.5,
+      "description": "Text fully arrived at center, sharp and solid, logo floating behind"
+    },
+    {
+      "time": 2.0,
+      "description": "Light sweep beginning from left edge, creating highlight on text surface"
+    },
+    {
+      "time": 2.5,
+      "description": "Light passing over center of text, bright specular reflection visible"
+    },
+    {
+      "time": 3.0,
+      "description": "Light exiting right side, text returns to ambient lighting"
+    },
+    {
+      "time": 5.0,
+      "description": "Final hold - text centered, logo still gently floating, scene at rest"
+    }
+  ],
+
+  "visualNotes": {
+    "colorPalette": ["#000000", "#60a5fa", "#ffffff"],
+    "mood": "cinematic, tech, premium",
+    "lighting": "dark environment with dramatic spotlight",
+    "motionCharacter": "smooth, polished, professional"
+  }
+}
